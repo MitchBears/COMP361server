@@ -1,6 +1,5 @@
 import ioConstructor from 'socket.io'
 import http from 'http';
-import {parse, stringify} from 'flatted/cjs';
 import firebase from "firebase";
 import express from 'express';
 import Player from './player.js'
@@ -302,41 +301,60 @@ io.on('connection', socket => {
         produceResponse(errorMessage, null, statusCode, "leaveLobby", callback);
     })
 
-    // socket.on("sendChat", (data, callback) => {
+    socket.on("sendChat", (data, callback) => {
 
-    //     let errorMessage = null;
-    //     let statusCode = failureCode;
+        let errorMessage = null;
+        let statusCode = failureCode;
 
-    //     if (!currentPlayer) {
-    //         errorMessage = "SEND CHAT FAILURE: user is not registered";
-    //         console.log(errorMessage);
-    //     } else if (!currentLobby) {
-    //         errorMessage = "SEND CHAT FAILURE: must be in lobby to send chat";
-    //         console.log(errorMessage);
-    //     } else {
-    //         socket.to(currentLobby.lobbyName).emit("receiveChat", {message: data.message})
-    //         statusCode = successCode;
-    //     }
-    //     produceResponse(errorMessage, null, statusCode, "sendChat", callback);
-    // })
+        if (!currentPlayer) {
+            errorMessage = "SEND CHAT FAILURE: user is not registered";
+            console.log(errorMessage);
+        } else if (!currentLobby) {
+            errorMessage = "SEND CHAT FAILURE: must be in lobby to send chat";
+            console.log(errorMessage);
+        } else {
+            socket.to(currentLobby.lobbyName).emit("receiveChat", {message: data.message})
+            statusCode = successCode;
+        }
+        produceResponse(errorMessage, null, statusCode, "sendChat", callback);
+    })
 
-    // socket.on("broadcastAction", (data, callback) => {
+    socket.on("broadcastGame", (data, callback) => {
+        
+        let statusCode = failureCode;
+        let errorMessage = null;
 
-    //     let statusCode = failureCode;
-    //     let errorMessage = null;
+        if (!currentPlayer) {
+            errorMessage = "BROADCAST GAME FAILURE: user is not registered";
+            console.log(errorMessage);
+        } else if (!currentLobby) {
+            errorMessage = "BROADCAST GAME FAILURE: user " + currentPlayer.username +" is not in a lobby.";
+            console.log(errorMessage);
+        } else {
+            socket.to(currentLobby.lobbyName).emit("receiveGame", data);
+            statusCode = successCode;
+        }
 
-    //     if (!currentPlayer) {
-    //         errorMessage = "BROADCAST ACTION FAILURE: user is not registered";
-    //         console.log(errorMessage);
-    //     } else if (!currentLobby) {
-    //         errorMessage = "BROADCAST ACTION FAILURE: must be in lobby to send chat";
-    //         console.log(errorMessage);
-    //     } else {
-    //         socket.to(currentLobby.lobbyname).emit("receiveAction", {action: data.action})
-    //         statusCode = successCode;
-    //     }
-    //     produceResponse(errorMessage, null, statusCode, "broadcastAction", callback);
-    // })
+        produceResponse(errorMessage, null, statusCode, "broadcastGame", callback);
+    })
+
+    socket.on("broadcastAction", (data, callback) => {
+
+        let statusCode = failureCode;
+        let errorMessage = null;
+
+        if (!currentPlayer) {
+            errorMessage = "BROADCAST ACTION FAILURE: user is not registered";
+            console.log(errorMessage);
+        } else if (!currentLobby) {
+            errorMessage = "BROADCAST ACTION FAILURE: must be in lobby to send chat";
+            console.log(errorMessage);
+        } else {
+            socket.to(currentLobby.lobbyName).emit("receiveAction", data)
+            statusCode = successCode;
+        }
+        produceResponse(errorMessage, null, statusCode, "broadcastAction", callback);
+    })
 
     // socket.on("consentRequirement", (data, callback) => {
         
@@ -367,18 +385,23 @@ io.on('connection', socket => {
     //     produceResponse(errorMessage, null, statusCode, "consentRequirement", callback);
     // })
 
-    // socket.on("disconnect", (reason) => {
-    //     if (currentPlayer) {
-    //         delete players[currentPlayer.username];
-    //     }
-    //     if (currentLobby) {
-    //         if (currentPlayer == currentLobby.owner) {
-    //             socket.to(currentLobby.lobbyName).emit("lobbyDeleted");
-    //             delete lobbies[currentLobby.lobbyName];
-    //             console.log("LOBBY DELETED: " + currentLobby.lobbyName);
-    //         }
-    //     }
-    // })
+    socket.on("disconnect", (reason) => {
+        if (currentLobby) {
+            if (currentPlayer == currentLobby.owner) {
+                socket.to(currentLobby.lobbyName).emit("lobbyDeleted");
+                delete lobbies[currentLobby.lobbyName];
+                console.log("LOBBY DELETED: " + currentLobby.lobbyName);
+            }
+            else {
+                currentLobby.removePlayer(currentPlayer.username);
+                socket.to(currentLobby.lobbyName).emit("playerLeft", {players: Object.keys(currentLobby.players)});
+            }
+            currentLobby = null;
+        }
+        if (currentPlayer) {
+            currentPlayer = null;
+        }
+    })
 })
 
 const port = 8080
