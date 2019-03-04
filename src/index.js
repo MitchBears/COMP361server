@@ -52,6 +52,7 @@ io.on('connection', socket => {
 
     var currentPlayer = null;
     var currentLobby = null;
+    var currentGame = null;
 
     function validatePlayer(username, givenPassword, callback, socket) {
         var errorMessage = "";
@@ -214,6 +215,7 @@ io.on('connection', socket => {
             let lobby = {
                 lobbyName: currentLobby.lobbyName,
                 owner: currentLobby.owner,
+                numPlayers: currentLobby.numPlayers,
                 players: Object.keys(currentLobby.players)
             };
             statusCode = successCode;
