@@ -1,0 +1,49 @@
+<head>
+  Flashpoint Networking example
+</head>
+<body>
+  <form>
+      Username: <br>
+      <input type="text" id="username">
+      <input type="submit" id="submitButton" value="Submit">
+  </form>
+  <form>
+    LobbyName: <br>
+    <input type="text" id="lobbyName">
+    <input type="submit" id="submitButton" value="Submit">
+  </form>
+  <button id="getLobbies"> Get Lobbies </button>
+  <button id="addLobbyFirebase" onclick="addLobby()"> add lobby firebase </button>
+  <button id="getLobbyFirebase" onclick="getLobby()"> get lobby firebase </button>
+  <div id="firebaseOutput"></div>
+</body>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket= io();
+  console.log("Successfully connected")
+  
+  socket.on("newPlayerJoin", (data) => {
+    console.log("ID: " + socket.id + " has received a 'newPlayerJoin' event for the socket: " + data.id);
+  })
+  var submitButton = document.getElementById("submitButton")
+  submitButton.onclick = () => {
+    const lobbyName = document.getElementById("lobbyName").value
+    const username = document.getElementById("username").value
+    console.log("Attempting to create lobby: " + lobbyName + " for user: " + username)
+    socket.emit("register", {username: username}, (data) => {
+      if (data == 0) {
+        console.log("User with username: " + username + " was successfully created");
+      } else {
+        console.log("error creating user " + username)
+      }
+    })
+    socket.emit("createLobby", {lobbyName: lobbyName}, (data) => {
+      if (data == 0) {
+        console.log(lobbyName + " lobby was successfully created")
+      } else {
+        console.log("error creating lobby " + lobbyName)
+      }
+    })
+  } 
+</script>
