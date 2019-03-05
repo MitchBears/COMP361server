@@ -5,6 +5,7 @@ import express from 'express';
 import Player from './player.js'
 import Lobby from './lobby.js'
 import Response from './response.js'
+import { debug } from 'util';
 
 const app = express();
 const server = http.Server(app);
@@ -322,7 +323,7 @@ io.on('connection', socket => {
     })
 
     socket.on("broadcastGame", (data, callback) => {
-        
+        console.log("Broadcast game");
         let statusCode = failureCode;
         let errorMessage = null;
 
@@ -333,10 +334,13 @@ io.on('connection', socket => {
             errorMessage = "BROADCAST GAME FAILURE: user " + currentPlayer.username +" is not in a lobby.";
             console.log(errorMessage);
         } else {
-            socket.to(currentLobby.lobbyName).emit("receiveGame", data);
+            console.log("Emitting receiveGame to lobby: " + currentLobby.lobbyName);
+            console.log(data);
+            socket.to(currentLobby.lobbyName).emit("getGame", {data: data});
             statusCode = successCode;
         }
 
+        console.log("Broadcast game complete");
         produceResponse(errorMessage, null, statusCode, "broadcastGame", callback);
     })
 
@@ -389,7 +393,9 @@ io.on('connection', socket => {
 
     socket.on("disconnect", (reason) => {
         if (currentLobby) {
-            if (currentPlayer == currentLobby.owner) {
+            console.log("Disconnecting player is a part of lobby");
+            if (currentPlayer.username == currentLobby.owner) {
+                console.log("Disconnecting player is lobby owner. Deleting lobby.");
                 socket.to(currentLobby.lobbyName).emit("lobbyDeleted");
                 delete lobbies[currentLobby.lobbyName];
                 console.log("LOBBY DELETED: " + currentLobby.lobbyName);
@@ -403,6 +409,7 @@ io.on('connection', socket => {
         if (currentPlayer) {
             currentPlayer = null;
         }
+        console.log("Socket with id " + socket.id + " has disconnected");
     })
 })
 
