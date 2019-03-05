@@ -271,6 +271,24 @@ io.on('connection', socket => {
         produceResponse(errorMessage, null, statusCode, "joinLobby", callback);
     })
 
+    socket.on("lobbyDeletedLobbyRefresh", (data, callback) => {
+
+        let errorMessage = null;
+        let statusCode = failureCode;
+
+        if (!currentPlayer) {
+            errorMessage = "LOBBY DELETED LOBBY REFRESH FAILURE: user has not registered";
+            console.log(errorMessage);
+        } else if (!currentLobby) {
+            errorMessage = "LOBBY DELETED LOBBY REFRESH FAILURE: user " + currentPlayer.username +" is not in a lobby";
+            console.log(errorMessage);
+        } else {
+            currentLobby = null;
+            statusCode = successCode;
+        }
+
+        produceResponse(errorMessage, null, statusCode, "lobbyDeletedLobbyRefresh", callback);
+    })
     socket.on("leaveLobby", (data, callback) => {
 
         let errorMessage = null;
