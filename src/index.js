@@ -353,7 +353,6 @@ io.on('connection', socket => {
             console.log(errorMessage);
         } else {
             console.log("Emitting receiveGame to lobby: " + currentLobby.lobbyName);
-            console.log(data);
             socket.to(currentLobby.lobbyName).emit("getGame", {data: data});
             statusCode = successCode;
         }
@@ -362,8 +361,30 @@ io.on('connection', socket => {
         produceResponse(errorMessage, null, statusCode, "broadcastGame", callback);
     })
 
-    socket.on("broadcastAction", (data, callback) => {
+    socket.on("nextTurn", (data, callback) => {
+        console.log("Broadcasting next turn");
 
+        let statusCode = failureCode;
+        let errorMessage = null;
+
+        if (!currentPlayer) {
+            errorMessage = "NEXT TURN FAILURE: user is not registered";
+            console.log(errorMessage);
+        } else if (!currentLobby) {
+            errorMessage = "NEXT TURN FAILURE: user " + currentPlayer.username + " is not in a lobby";
+            console.log(console.errorMessage);
+        } else {
+            socket.to(currentLobby.lobbyName).emit("nextTurn", {data: data})
+            statusCode = successCode;
+        }
+
+        console.log("Broadcast next turn complete");
+        produceResponse(errorMessage, null, statusCode, "nextTurn", callback);
+
+    })
+
+    socket.on("broadcastAction", (data, callback) => {
+        console.log("Broadcasting action");
         let statusCode = failureCode;
         let errorMessage = null;
 
@@ -374,7 +395,8 @@ io.on('connection', socket => {
             errorMessage = "BROADCAST ACTION FAILURE: must be in lobby to send chat";
             console.log(errorMessage);
         } else {
-            socket.to(currentLobby.lobbyName).emit("receiveAction", data)
+            socket.to(currentLobby.lobbyName).emit("receiveAction", {data: data})
+            console.log("receive action sent");
             statusCode = successCode;
         }
         produceResponse(errorMessage, null, statusCode, "broadcastAction", callback);
