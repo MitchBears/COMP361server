@@ -334,7 +334,7 @@ io.on('connection', socket => {
             errorMessage = "SEND CHAT FAILURE: must be in lobby to send chat";
             console.log(errorMessage);
         } else {
-            socket.to(currentLobby.lobbyName).emit("receiveChat", {message: data.message})
+            socket.to(currentLobby.lobbyName).emit("receiveChat", {data: data})
             statusCode = successCode;
         }
         produceResponse(errorMessage, null, statusCode, "sendChat", callback);
