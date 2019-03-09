@@ -354,6 +354,9 @@ io.on('connection', socket => {
         } else {
             console.log("Emitting receiveGame to lobby: " + currentLobby.lobbyName);
             socket.to(currentLobby.lobbyName).emit("getGame", {data: data});
+
+            delete lobbies[currentLobby.lobbyName];
+
             statusCode = successCode;
         }
 
@@ -437,8 +440,10 @@ io.on('connection', socket => {
             if (currentPlayer.username == currentLobby.owner) {
                 console.log("Disconnecting player is lobby owner. Deleting lobby.");
                 socket.to(currentLobby.lobbyName).emit("lobbyDeleted");
-                delete lobbies[currentLobby.lobbyName];
-                console.log("LOBBY DELETED: " + currentLobby.lobbyName);
+                if (lobbies[currentLobby.lobbyName]) {
+                    delete lobbies[currentLobby.lobbyName];
+                    console.log("LOBBY DELETED: " + currentLobby.lobbyName);
+                }
             }
             else {
                 currentLobby.removePlayer(currentPlayer.username);
