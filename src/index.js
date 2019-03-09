@@ -132,10 +132,6 @@ io.on('connection', socket => {
             errorMessage = "LOBBY CREATION FAILURE: lobby must have a Lobby Name";
             console.log(errorMessage);
         } 
-        //else if (!data.game) {
-        //     errorMessage = "LOBBY CREATION FAILURE: lobby must include a game";
-        //     console.log(errorMessage);
-        // } 
         else {
             
             console.log("Received request to create lobby: " + lobbyName + " by player: " + currentPlayer.username);
@@ -148,6 +144,7 @@ io.on('connection', socket => {
                 // ADD GAME CREATION AT SOME POINT
                 currentLobby = new Lobby(lobbyID, lobbyName, currentPlayer, null, 3);
                 lobbies[lobbyName] = currentLobby;
+                lobbyID++;
                 // Join lobby creator to lobby.
                 socket.join(lobbyName);
 
