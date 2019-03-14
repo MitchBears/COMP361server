@@ -11,7 +11,6 @@ const app = express();
 const server = http.Server(app);
 const io = ioConstructor(server);
 
-const gameRoot = "/game";
 const usernameRoot = "/username";
 
 const failureCode = -1;
