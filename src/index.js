@@ -140,8 +140,10 @@ io.on('connection', socket => {
                 console.log(errorMessage);
             } else {
                 console.log("SUCCESS: Lobby " + lobbyName + " created");
-                // ADD GAME CREATION AT SOME POINT
                 currentLobby = new Lobby(lobbyID, lobbyName, currentPlayer, null, 3);
+                currentLobby.difficulty = data.difficulty;
+                currentLobby.mode = data.mode;
+                currentLobby.map = data.map
                 lobbies[lobbyName] = currentLobby;
                 lobbyID++;
                 // Join lobby creator to lobby.
@@ -213,7 +215,10 @@ io.on('connection', socket => {
                 lobbyName: currentLobby.lobbyName,
                 owner: currentLobby.owner,
                 numPlayers: currentLobby.numPlayers,
-                players: Object.keys(currentLobby.players)
+                players: Object.keys(currentLobby.players),
+                difficulty: currentLobby.difficulty,
+                mode: currentLobby.mode,
+                map: currentLobby.map
             };
             statusCode = successCode;
             lobbyInfoToReturn = JSON.stringify(lobby);
