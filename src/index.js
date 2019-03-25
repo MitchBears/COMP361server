@@ -143,7 +143,9 @@ io.on('connection', socket => {
                 currentLobby = new Lobby(lobbyID, lobbyName, currentPlayer, null, 3);
                 currentLobby.difficulty = data.difficulty;
                 currentLobby.mode = data.mode;
-                currentLobby.map = data.map
+                currentLobby.map = data.map;
+                currentLobby.loadGame = data.loadGame;
+                console.log(currentLobby.loadGame);
                 lobbies[lobbyName] = currentLobby;
                 lobbyID++;
                 // Join lobby creator to lobby.
@@ -217,6 +219,7 @@ io.on('connection', socket => {
                 numPlayers: currentLobby.numPlayers,
                 players: Object.keys(currentLobby.players),
                 difficulty: currentLobby.difficulty,
+                loadGame : currentLobby.loadGame,
                 mode: currentLobby.mode,
                 map: currentLobby.map
             };
