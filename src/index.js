@@ -95,6 +95,45 @@ io.on('connection', socket => {
         })
     }
 
+    function saveGame(username, gameToSaveName, gameToSave, callback, socket){
+        let errorMessage = null;
+        let statusCode = failureCode;
+    
+        database.ref(usernameRoot + "/" + username).once('value').then(snapshot => {
+            const savedGame = (snapshot.val() && snapshot.val().gameToSaveName) || null;
+    
+            if (!savedGame) {
+                database.ref(usernameRoot + "/" + username).set({
+                    gameToSaveName: gameToSave
+                });
+    
+                statusCode = successCode;
+            } else {
+                errorMessage = "SAVE GAME FAILURE: Player with the username: " + username + " already has saved game called " + gameToSaveName;
+            }
+    
+            produceResponse(errorMessage, null, statusCode, "saveGame", callback);
+        })
+    }
+
+    function LoadGame(username, gameToLoadName, callback, socket){
+        let errorMessage = null;
+        let statusCode = failureCode;
+    
+        database.ref(usernameRoot + "/" + username).once('value').then(snapshot => {
+            const savedGame = (snapshot.val() && snapshot.val().gameToLoadName) || null;
+    
+            if (savedGame) {
+                statusCode = successCode;
+            } else {
+                errorMessage = "LOAD GAME FAILURE: Player with the username: " + username + " does not have saved game called " + gameToLoadName;
+            }
+    
+            produceResponse(errorMessage, savedGame, statusCode, "loadGame", callback);
+        })
+    }
+
+
     socket.on("register", (data, callback) => {
         console.log("Attempting user registration with the username: " + data.username);
         const playerName = data.username;
@@ -324,6 +363,44 @@ io.on('connection', socket => {
         }
 
         produceResponse(errorMessage, null, statusCode, "leaveLobby", callback);
+    })
+
+    socket.on("save game", (data, callback) => {
+        console.log("Attempting save game");
+        let statusCode = failureCode;
+        let errorMessage = null;
+        const gameToSave = data.gameToSave;
+        const gameToSaveName = data.gameToSaveName;
+
+        if (!currentPlayer) {
+            errorMessage = "SAVE GAME FAILURE: user is not registered";
+            console.log(errorMessage);
+        } else if (!currentLobby) {
+            errorMessage = "SAVE GAME FAILURE: must be in lobby to save game";
+            console.log(errorMessage);
+        } else {
+            console.log("game saved");
+            saveGame(currentPlayer, gameToSaveName, gameToSave, callback, socket)
+        }
+    })
+
+    socket.on("load game", (data, callback) => {
+        console.log("Attempting load game");
+        let statusCode = failureCode;
+        let errorMessage = null;
+        const gameToLoadName = data.gameToLoadName;
+        const loadedGame;
+
+        if (!currentPlayer) {
+            errorMessage = "LOAD GAME FAILURE: user is not registered";
+            console.log(errorMessage);
+        } else if (!currentLobby) {
+            errorMessage = "LOAD GAME FAILURE: must be in lobby to load game";
+            console.log(errorMessage);
+        } else {
+            console.log("game loaded");
+            LoadGame(currentPlayer, gameToLoadName, callback, socket);
+        }
     })
 
     socket.on("sendChat", (data, callback) => {
