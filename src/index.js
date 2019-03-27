@@ -389,7 +389,7 @@ io.on('connection', socket => {
         let statusCode = failureCode;
         let errorMessage = null;
         const gameToLoadName = data.gameToLoadName;
-        const loadedGame;
+        const loadedGame = null;
 
         if (!currentPlayer) {
             errorMessage = "LOAD GAME FAILURE: user is not registered";
