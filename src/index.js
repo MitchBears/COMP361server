@@ -95,16 +95,22 @@ io.on('connection', socket => {
         })
     }
 
-    function saveGame(username, gameToSaveName, gameToSave, callback, socket){
+    function saveGame(currentPlayer, gameToSaveName, gameToSave, callback, socket){
         let errorMessage = null;
         let statusCode = failureCode;
+        let username = currentPlayer.username;
+        console.log("req to save game");
     
         database.ref(usernameRoot + "/" + username).once('value').then(snapshot => {
-            const savedGame = (snapshot.val() && snapshot.val().gameToSaveName) || null;
+            let gameExists = false;
+            snapshot.forEach((child) => {
+                console.log(child.key + ", " + gameToSaveName);
+                if(child.key == gameToSaveName) gameExists = true;
+            });
     
-            if (!savedGame) {
-                database.ref(usernameRoot + "/" + username).set({
-                    gameToSaveName: gameToSave
+            if (!gameExists) {
+                database.ref(usernameRoot + "/" + username).update({
+                    [gameToSaveName]: gameToSave
                 });
     
                 statusCode = successCode;
@@ -116,9 +122,10 @@ io.on('connection', socket => {
         })
     }
 
-    function LoadGame(username, gameToLoadName, callback, socket){
+    function LoadGame(currentPlayer, gameToLoadName, callback, socket){
         let errorMessage = null;
         let statusCode = failureCode;
+        let username = currentPlayer.username;
     
         database.ref(usernameRoot + "/" + username).once('value').then(snapshot => {
             const savedGame = (snapshot.val() && snapshot.val().gameToLoadName) || null;
@@ -365,7 +372,7 @@ io.on('connection', socket => {
         produceResponse(errorMessage, null, statusCode, "leaveLobby", callback);
     })
 
-    socket.on("save game", (data, callback) => {
+    socket.on("saveGame", (data, callback) => {
         console.log("Attempting save game");
         let statusCode = failureCode;
         let errorMessage = null;
@@ -384,7 +391,7 @@ io.on('connection', socket => {
         }
     })
 
-    socket.on("load game", (data, callback) => {
+    socket.on("loadGame", (data, callback) => {
         console.log("Attempting load game");
         let statusCode = failureCode;
         let errorMessage = null;
