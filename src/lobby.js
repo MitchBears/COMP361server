@@ -21,8 +21,8 @@ class Lobby {
         }
     }
 
-    containsPlayer(player) {
-        return this.players[player.username];
+    containsPlayer(username) {
+        return this.players[username];
     }
 }
 
