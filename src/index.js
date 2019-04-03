@@ -505,9 +505,9 @@ io.on('connection', socket => {
             errorMessage = "CONSENT REQUIREMENT FAILURE: " + currentPlayer.username + " must be in a lobby";
             console.log(errorMessage);
         } else {
-            const playerToSendTo = currentLobby.containsPlayer(data.playerToSendTo);
+            const playerToSendTo = currentLobby.containsPlayer(data.ConsentRequiredFromPlayer);
             if (playerToSendTo) {
-                io.to(playerToSendTo.socket.id).emit("consentRequired", {action: data.action})
+                io.to(playerToSendTo.socket.id).emit("consentRequired", {data: data})
                 statusCode = successCode;
             } else {
                 errorMessage = "CONSENT REQUIREMENT FAILURE: the player" + data.username + " doesn't exist";
@@ -517,7 +517,8 @@ io.on('connection', socket => {
     })
 
     socket.on("consentRequirementResponse", (data, callback) => {
-        socket.emit("consentRequirementResponse", {data : data});
+        const playerToSendTo = currentLobby.containsPlayer(data.ConsentPromptSentFromPlayer);
+        io.to(playerToSendTo.socket.id).emit("consentRequirementResponse", {data : data});
         produceResponse(null, null, successCode, "consentRequirementResponse", callback);
     })
 
