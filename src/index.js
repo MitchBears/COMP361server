@@ -12,6 +12,7 @@ const server = http.Server(app);
 const io = ioConstructor(server);
 
 const usernameRoot = "/username";
+const saveFolder = "savedGames"
 
 const failureCode = -1;
 const successCode = 1;
@@ -99,17 +100,15 @@ io.on('connection', socket => {
         let errorMessage = null;
         let statusCode = failureCode;
         let username = currentPlayer.username;
-        console.log("req to save game");
     
         database.ref(usernameRoot + "/" + username).once('value').then(snapshot => {
             let gameExists = false;
             snapshot.forEach((child) => {
-                console.log(child.key + ", " + gameToSaveName);
                 if(child.key == gameToSaveName) gameExists = true;
             });
     
             if (!gameExists) {
-                database.ref(usernameRoot + "/" + username).update({
+                database.ref(usernameRoot + "/" + username + "/" + saveFolder).update({
                     [gameToSaveName]: gameToSave
                 });
     
@@ -122,21 +121,55 @@ io.on('connection', socket => {
         })
     }
 
+    function getAllSavedGames(currentPlayer, callback, socket){
+        let errorMessage = null;
+        let statusCode = failureCode;
+        let username = currentPlayer.username;
+    
+        database.ref(usernameRoot + "/" + username + "/" + saveFolder).once('value').then(snapshot => {
+            let allSavedGames = snapshot.val() || null;
+            let allSavedGamesFormatted = [];
+
+            if (allSavedGames) {
+                statusCode = successCode;
+            } else {
+                errorMessage = "GET ALL SAVED GAMES FAILURE: Player with the username: " + username + " does not have any saved games";
+            }
+            for (var key in allSavedGames) {
+                allSavedGamesFormatted.push({"gameToSaveName": key, "gameToSave": allSavedGames[key]});
+              }
+              console.log(allSavedGamesFormatted.toString());
+              var SavedGamesToReturn = JSON.stringify(allSavedGamesFormatted);
+            produceResponse(errorMessage, SavedGamesToReturn, statusCode, "getAllSavedGames", callback);
+        })
+    }
+
+
     function LoadGame(currentPlayer, gameToLoadName, callback, socket){
         let errorMessage = null;
         let statusCode = failureCode;
         let username = currentPlayer.username;
     
-        database.ref(usernameRoot + "/" + username).once('value').then(snapshot => {
-            const savedGame = (snapshot.val() && snapshot.val().gameToLoadName) || null;
-    
+        database.ref(usernameRoot + "/" + username + "/" + saveFolder).once('value').then(snapshot => {
+            const allSavedGames = snapshot.val() || null;
+            var savedGame = null;
+
+            for (var key in allSavedGames) {
+            //console.log(key);
+
+                if(key == gameToLoadName){
+                    savedGame =  allSavedGames[key];
+                    break;
+                }
+            }
+            //console.log(savedGame);
             if (savedGame) {
                 statusCode = successCode;
             } else {
                 errorMessage = "LOAD GAME FAILURE: Player with the username: " + username + " does not have saved game called " + gameToLoadName;
             }
     
-            produceResponse(errorMessage, savedGame, statusCode, "loadGame", callback);
+            produceResponse(errorMessage, JSON.stringify(savedGame), statusCode, "loadGame", callback);
         })
     }
 
@@ -191,7 +224,7 @@ io.on('connection', socket => {
                 currentLobby.mode = data.mode;
                 currentLobby.map = data.map;
                 currentLobby.loadGame = data.loadGame;
-                console.log(currentLobby.loadGame);
+                currentLobby.loadGameName = data.loadGameName;
                 lobbies[lobbyName] = currentLobby;
                 lobbyID++;
                 // Join lobby creator to lobby.
@@ -267,10 +300,13 @@ io.on('connection', socket => {
                 difficulty: currentLobby.difficulty,
                 loadGame : currentLobby.loadGame,
                 mode: currentLobby.mode,
-                map: currentLobby.map
+                map: currentLobby.map,
+                loadGame: currentLobby.loadGame,
+                loadGameName: currentLobby.loadGameName
             };
             statusCode = successCode;
             lobbyInfoToReturn = JSON.stringify(lobby);
+            console.log(lobbyInfoToReturn);
         }
 
         produceResponse(errorMessage, lobbyInfoToReturn, statusCode, "getLobbies", callback);
@@ -391,6 +427,20 @@ io.on('connection', socket => {
         }
     })
 
+    socket.on("getAllSavedGames", (data, callback) => {
+        console.log("Attempting get all saved game");
+        let statusCode = failureCode;
+        let errorMessage = null;
+        const loadedGame = null;
+
+        if (!currentPlayer) {
+            errorMessage = "LOAD GAME FAILURE: user is not registered";
+            console.log(errorMessage);
+        } else {
+            getAllSavedGames(currentPlayer, callback, socket);
+        }
+    })
+
     socket.on("loadGame", (data, callback) => {
         console.log("Attempting load game");
         let statusCode = failureCode;
@@ -398,14 +448,15 @@ io.on('connection', socket => {
         const gameToLoadName = data.gameToLoadName;
         const loadedGame = null;
 
+        console.log("game name: " + gameToLoadName);
         if (!currentPlayer) {
             errorMessage = "LOAD GAME FAILURE: user is not registered";
             console.log(errorMessage);
-        } else if (!currentLobby) {
+        } /*else if (!currentLobby) {
             errorMessage = "LOAD GAME FAILURE: must be in lobby to load game";
             console.log(errorMessage);
-        } else {
-            console.log("game loaded");
+        }*/ else {
+            console.log("Load Game");
             LoadGame(currentPlayer, gameToLoadName, callback, socket);
         }
     })
