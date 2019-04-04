@@ -544,34 +544,34 @@ io.on('connection', socket => {
         produceResponse(errorMessage, null, statusCode, "broadcastAction", callback);
     })
 
-    // socket.on("consentRequirement", (data, callback) => {
+    socket.on("consentRequirement", (data, callback) => {
         
-    //     let errorMessage = null;
-    //     let statusCode = failureCode;
+        let errorMessage = null;
+        let statusCode = failureCode;
 
-    //     if (!currentPlayer) {
-    //         errorMessage = "CONSENT REQUIREMENT FAILURE: user is not registered";
-    //         console.log(errorMessage);
-    //     } else if (!currentLobby) {
-    //         errorMessage = "CONSENT REQUIREMENT FAILURE: " + currentPlayer.username + " must be in a lobby";
-    //         console.log(errorMessage);
-    //     } else {
-    //         const playerToSendTo = playerExists(data.username)
-    //         if (playerToSendTo) {
-    //             socket.to(playerToSendTo.username).emit("consentRequired", {action: data.action}, (data) => {
-    //                 let reply = JSON.parse(data);
-    //                 if (reply.statusCode == 0) {
-    //                     statusCode = successCode;
-    //                 } else {
-    //                     errorMessage = "CONSENT NOT GRANTED";
-    //                 }
-    //             })
-    //         } else {
-    //             errorMessage = "CONSENT REQUIREMENT FAILURE: the player" + data.username + " doesn't exist";
-    //         }
-    //     }
-    //     produceResponse(errorMessage, null, statusCode, "consentRequirement", callback);
-    // })
+        if (!currentPlayer) {
+            errorMessage = "CONSENT REQUIREMENT FAILURE: user is not registered";
+            console.log(errorMessage);
+        } else if (!currentLobby) {
+            errorMessage = "CONSENT REQUIREMENT FAILURE: " + currentPlayer.username + " must be in a lobby";
+            console.log(errorMessage);
+        } else {
+            const playerToSendTo = currentLobby.containsPlayer(data.ConsentRequiredFromPlayer);
+            if (playerToSendTo) {
+                io.to(playerToSendTo.socket.id).emit("consentRequired", {data: data})
+                statusCode = successCode;
+            } else {
+                errorMessage = "CONSENT REQUIREMENT FAILURE: the player" + data.username + " doesn't exist";
+            }
+        }
+        produceResponse(errorMessage, null, statusCode, "consentRequirement", callback);
+    })
+
+    socket.on("consentRequirementResponse", (data, callback) => {
+        const playerToSendTo = currentLobby.containsPlayer(data.ConsentPromptSentFromPlayer);
+        io.to(playerToSendTo.socket.id).emit("consentRequirementResponse", {data : data});
+        produceResponse(null, null, successCode, "consentRequirementResponse", callback);
+    })
 
     socket.on("disconnect", (reason) => {
         if (currentLobby) {
