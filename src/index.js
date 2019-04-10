@@ -30,6 +30,7 @@ firebase.initializeApp(config);
 const database = firebase.database();
 
 const lobbies = {};
+const signedInPlayers = [];
 
 function lobbyExists(lobbyName) {
     return lobbies[lobbyName];
@@ -61,7 +62,7 @@ io.on('connection', socket => {
         database.ref(usernameRoot + "/" + username).once('value').then(snapshot => {
             const userPassword = (snapshot.val() && snapshot.val().password) || null;
     
-            if (givenPassword == userPassword) {
+            if (givenPassword == userPassword && !signedInPlayers.includes(username)) {
                 statusCode = successCode;
                 currentPlayer = new Player(socket.id, username);
             } else {
@@ -190,9 +191,16 @@ io.on('connection', socket => {
 
         if (currentPlayer == undefined) {
             currentPlayer = validatePlayer(playerName, playerPassword, callback, socket); 
+            signedInPlayers.push(currentPlayer.username);
         } else {
             console.log("User already registered as: " + currentPlayer.username);
         } 
+    })
+
+    socket.on("logout", (data, callback) => {
+        console.log("Signing out player with username: " + currentPlayer.username);
+        signedInPlayers.splice(signedInPlayers.indexOf(currentPlayer.username), 1);
+        currentPlayer = null;
     })
     
     socket.on("createLobby", (data, callback) => {
@@ -597,6 +605,7 @@ io.on('connection', socket => {
             currentLobby = null;
         }
         if (currentPlayer) {
+            signedInPlayers.splice(signedInPlayers.indexOf(currentPlayer.username), 1);
             currentPlayer = null;
         }
         console.log("Socket with id " + socket.id + " has disconnected");
