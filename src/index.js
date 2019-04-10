@@ -575,6 +575,7 @@ io.on('connection', socket => {
     })
 
     socket.on("gameEnded", (data, callback) => {
+        socket.leave(currentLobby.lobbyName);
         currentLobby = null;
     })
 
