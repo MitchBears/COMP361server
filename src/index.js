@@ -572,6 +572,10 @@ io.on('connection', socket => {
         produceResponse(null, null, successCode, "consentRequirementResponse", callback);
     })
 
+    socket.on("gameEnded", (data, callback) => {
+        currentLobby = null;
+    })
+
     socket.on("disconnect", (reason) => {
         if (currentLobby) {
             console.log("Disconnecting player is a part of lobby");
