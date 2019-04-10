@@ -65,6 +65,7 @@ io.on('connection', socket => {
             if (givenPassword == userPassword && !signedInPlayers.includes(username)) {
                 statusCode = successCode;
                 currentPlayer = new Player(socket.id, username);
+                signedInPlayers.push(currentPlayer.username);
             } else {
                 errorMessage = "LOGIN FAILURE: incorrect username and password";
             }
@@ -191,7 +192,6 @@ io.on('connection', socket => {
 
         if (currentPlayer == undefined) {
             currentPlayer = validatePlayer(playerName, playerPassword, callback, socket); 
-            signedInPlayers.push(currentPlayer.username);
         } else {
             console.log("User already registered as: " + currentPlayer.username);
         } 
