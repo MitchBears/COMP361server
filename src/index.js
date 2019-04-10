@@ -88,6 +88,7 @@ io.on('connection', socket => {
     
                 statusCode = successCode;
                 currentPlayer = new Player(socket.id, username);
+                signedInPlayers.push(currentPlayer.username);
     
             } else {
                 errorMessage = "REGISTRATION FAILURE: Player with the username: " + username + " already exists";
@@ -199,7 +200,9 @@ io.on('connection', socket => {
 
     socket.on("logout", (data, callback) => {
         console.log("Signing out player with username: " + currentPlayer.username);
-        signedInPlayers.splice(signedInPlayers.indexOf(currentPlayer.username), 1);
+        if (signedInPlayers.includes(currentPlayer.username)) {
+            signedInPlayers.splice(signedInPlayers.indexOf(currentPlayer.username), 1);
+        }
         currentPlayer = null;
     })
     
