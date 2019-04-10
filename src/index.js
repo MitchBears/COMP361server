@@ -605,7 +605,9 @@ io.on('connection', socket => {
             currentLobby = null;
         }
         if (currentPlayer) {
-            signedInPlayers.splice(signedInPlayers.indexOf(currentPlayer.username), 1);
+            if (signedInPlayers.includes(currentPlayer.username)) {
+                signedInPlayers.splice(signedInPlayers.indexOf(currentPlayer.username), 1);
+            }
             currentPlayer = null;
         }
         console.log("Socket with id " + socket.id + " has disconnected");
